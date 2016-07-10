@@ -70,9 +70,24 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 		// something to make the compiler happy
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>) target;
+
+		Node p = root;
+
+		int cmp;
 		
 		// the actual search
-        // TODO: Fill this in.
+		while(p != null) {
+
+			cmp = k.compareTo(p.key);
+
+			if(cmp == 0)
+				return p;
+			else if(cmp > 0) 
+				p = p.right;
+			else 
+				p = p.left;
+		}
+
         return null;
 	}
 
@@ -92,7 +107,17 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsValue(Object target) {
-		return false;
+		return containsValueHelper(root, target);
+	}
+
+	private boolean containsValueHelper(Node root, Object target) {
+
+		if(root == null)
+			return false;
+		else if(equals(root.value, target))
+			return true;
+		else
+			return containsValueHelper(root.left, target) || containsValueHelper(root.right, target);
 	}
 
 	@Override
@@ -117,8 +142,18 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	@Override
 	public Set<K> keySet() {
 		Set<K> set = new LinkedHashSet<K>();
-        // TODO: Fill this in.
+		keySetHelper(root,set);
 		return set;
+	}
+
+	public void keySetHelper(Node root, Set<K> set) {
+
+		if(root == null)
+			return;
+
+		keySetHelper(root.left, set);
+		set.add(root.key);
+		keySetHelper(root.right, set);
 	}
 
 	@Override
@@ -131,11 +166,82 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			size++;
 			return null;
 		}
+
+		@SuppressWarnings("unchecked")
+		Comparable<? super K> k = (Comparable<? super K>) key;
+
+		int cmp = k.compareTo(root.key);
+
+		if(cmp == 0) {
+
+			Node newRoot = new Node(key, value);
+			Node oldRoot = root;
+
+			newRoot.left = oldRoot.left;
+			newRoot.right = oldRoot.right;
+			root = newRoot;
+
+			return oldRoot.value;
+		}
+
 		return putHelper(root, key, value);
 	}
 
 	private V putHelper(Node node, K key, V value) {
-        // TODO: Fill this in.
+
+		@SuppressWarnings("unchecked")
+		Comparable<? super K> k = (Comparable<? super K>) key;
+
+		int cmp = k.compareTo(node.key);
+
+		if(cmp > 0) {
+			
+			if(node.right == null) {
+				node.right = new Node(key, value);
+				size++;
+
+			} else {
+
+				if(k.compareTo(node.right.key) == 0) {
+					
+					Node newRoot = new Node(key, value);
+					Node oldRoot = node.right;
+
+					newRoot.left = oldRoot.left;
+					newRoot.right = oldRoot.right;
+
+					node.right = newRoot;
+
+					return oldRoot.value;
+				}
+
+				return putHelper(node.right, key, value);
+			}
+
+		} else {
+			
+			if(node.left == null) {
+				node.left = new Node(key, value);
+				size++;
+			} else {
+
+				if(k.compareTo(node.left.key) == 0) {
+					
+					Node newRoot = new Node(key, value);
+					Node oldRoot = node.left;
+
+					newRoot.left = oldRoot.left;
+					newRoot.right = oldRoot.right;
+
+					node.left = newRoot;
+
+					return oldRoot.value;
+				}
+
+				return putHelper(node.left, key, value);
+			}
+		}
+
         return null;
 	}
 
